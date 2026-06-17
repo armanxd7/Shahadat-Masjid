@@ -1,0 +1,18 @@
+{
+  "admins": [
+    "armanorig7@gmail.com"
+  ],
+  "notices": [
+    {
+      "id": "notice_default",
+      "text": "✨ Assalamu Alaikum! Welcome to the Masjid Notice Board. Track prayer timings, announcements, and daily updates here.",
+      "createdAt": "2026-06-14T00:00:00.000Z",
+      "author": "Masjid Committee",
+      "priority": "normal",
+      "active": true
+    }
+  ],
+  "prayerTimes": {},
+  "customWisdoms": [],
+  "customDuas": []
+}

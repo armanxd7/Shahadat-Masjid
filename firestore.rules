@@ -1,0 +1,235 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net: Default Deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definitions & Reuseable global helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.get('email', '') == "armanorig7@gmail.com";
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && (request.auth.token.get('email_verified', false) == true || request.auth.token.get('email', '') == "armanorig7@gmail.com");
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User collections mapping
+    match /users/{userId} {
+      
+      // Enforce security ID checks
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isEmailVerified() 
+        && incoming().uid == userId
+        && incoming().username is string && incoming().username.size() >= 1 && incoming().username.size() <= 100
+        && incoming().selectedLocation is string && incoming().selectedLocation.size() <= 100
+        && incoming().streak is int && incoming().streak >= 0
+        && (incoming().savingsTotal is int || incoming().savingsTotal is float) && incoming().savingsTotal >= 0
+        && incoming().keys().hasAll(['uid', 'username', 'selectedLocation', 'streak', 'savingsTotal'])
+        && incoming().keys().size() == 5;
+        
+      allow update: if isOwner(userId) && isEmailVerified()
+        && incoming().uid == userId
+        && incoming().username is string && incoming().username.size() >= 1 && incoming().username.size() <= 100
+        && incoming().selectedLocation is string && incoming().selectedLocation.size() <= 100
+        && incoming().streak is int && incoming().streak >= 0
+        && (incoming().savingsTotal is int || incoming().savingsTotal is float) && incoming().savingsTotal >= 0
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['username', 'selectedLocation', 'streak', 'savingsTotal'])
+        );
+
+      allow delete: if false; // Profiles cannot be randomly destroyed
+
+      // Habits Subcollection
+      match /habits/{habitId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+        
+        allow create: if isOwner(userId) && isEmailVerified()
+          && isValidId(habitId)
+          && incoming().id == habitId
+          && incoming().userId == userId
+          && incoming().name is string && incoming().name.size() >= 1 && incoming().name.size() <= 150
+          && incoming().completed is bool
+          && incoming().type is string && incoming().type.size() <= 50
+          && (incoming().get('extraInfo', '') is string && incoming().get('extraInfo', '').size() <= 200)
+          && incoming().keys().hasAll(['id', 'userId', 'name', 'completed', 'type'])
+          && (incoming().keys().size() == 5 || (incoming().keys().size() == 6 && incoming().keys().hasAll(['extraInfo'])));
+
+        allow update: if isOwner(userId) && isEmailVerified()
+          && incoming().id == habitId
+          && incoming().userId == userId
+          && incoming().name is string && incoming().name.size() >= 1 && incoming().name.size() <= 150
+          && incoming().completed is bool
+          && incoming().type is string && incoming().type.size() <= 50
+          && (incoming().get('extraInfo', '') is string && incoming().get('extraInfo', '').size() <= 200)
+          && incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'name', 'extraInfo', 'type']);
+
+        allow delete: if isOwner(userId) && isEmailVerified();
+      }
+
+      // Savings Transactions Subcollection
+      match /transactions/{transactionId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+
+        allow create: if isOwner(userId) && isEmailVerified()
+          && isValidId(transactionId)
+          && incoming().id == transactionId
+          && incoming().userId == userId
+          && (incoming().amount is int || incoming().amount is float) && incoming().amount >= 0
+          && incoming().date is string && incoming().date.size() <= 60
+          && incoming().note is string && incoming().note.size() <= 250
+          && incoming().keys().hasAll(['id', 'userId', 'amount', 'date', 'note'])
+          && incoming().keys().size() == 5;
+
+        allow update: if false; // Transactions ledger items are immutable for integrity!
+        allow delete: if isOwner(userId) && isEmailVerified();
+      }
+
+      // Reflections Subcollection
+      match /reflections/{reflectionId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+
+        allow create: if isOwner(userId) && isEmailVerified()
+          && isValidId(reflectionId)
+          && incoming().id == reflectionId
+          && incoming().userId == userId
+          && incoming().date is string && incoming().date.size() <= 60
+          && incoming().feeling is string && incoming().feeling.size() <= 20
+          && incoming().ayats is string && incoming().ayats.size() <= 300
+          && incoming().content is string && incoming().content.size() <= 5000
+          && incoming().keys().hasAll(['id', 'userId', 'date', 'feeling', 'ayats', 'content'])
+          && incoming().keys().size() == 6;
+
+        allow update: if isOwner(userId) && isEmailVerified()
+          && incoming().id == reflectionId
+          && incoming().userId == userId
+          && incoming().date is string && incoming().date.size() <= 60
+          && incoming().feeling is string && incoming().feeling.size() <= 20
+          && incoming().ayats is string && incoming().ayats.size() <= 300
+          && incoming().content is string && incoming().content.size() <= 5000
+          && incoming().diff(existing()).affectedKeys().hasOnly(['feeling', 'ayats', 'content', 'date']);
+
+        allow delete: if isOwner(userId) && isEmailVerified();
+      }
+
+      // Donations Subcollection
+      match /donations/{donationId} {
+        allow list: if isOwner(userId) || isAdmin();
+        allow get: if isOwner(userId) || isAdmin();
+
+        allow create: if isOwner(userId) && isEmailVerified()
+          && isValidId(donationId)
+          && incoming().id == donationId
+          && incoming().userId == userId
+          && (incoming().amount is int || incoming().amount is float) && incoming().amount > 0
+          && incoming().paymentMethod is string && incoming().paymentMethod.size() <= 80
+          && incoming().date is string && incoming().date.size() <= 80
+          && incoming().userName is string && incoming().userName.size() <= 150
+          && incoming().userEmail is string && incoming().userEmail.size() <= 150
+          && (incoming().get('notes', '') is string && incoming().get('notes', '').size() <= 300)
+          && incoming().keys().hasAll(['id', 'userId', 'amount', 'paymentMethod', 'date', 'userName', 'userEmail'])
+          && (incoming().keys().size() == 7 || (incoming().keys().size() == 8 && incoming().keys().hasAll(['notes'])));
+
+        allow update: if false; // Donation log is immutable
+        allow delete: if isOwner(userId) && isEmailVerified() || isAdmin(); 
+      }
+
+      // Dhikr Subcollection
+      match /dhikr/{dhikrId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+        
+        allow create: if isOwner(userId) && isEmailVerified()
+          && isValidId(dhikrId)
+          && incoming().id == dhikrId
+          && incoming().userId == userId
+          && incoming().date is string && incoming().date.size() <= 20
+          && incoming().count is int && incoming().count >= 0
+          && incoming().goal is int && (incoming().goal == 33 || incoming().goal == 99 || incoming().goal == 100 || incoming().goal == -1 || incoming().goal >= 0)
+          && incoming().tasbihName is string && incoming().tasbihName.size() <= 100
+          && incoming().updatedAt is string && incoming().updatedAt.size() <= 80
+          && incoming().keys().hasAll(['id', 'userId', 'date', 'count', 'goal', 'tasbihName', 'updatedAt'])
+          && incoming().keys().size() == 7;
+
+        allow update: if isOwner(userId) && isEmailVerified()
+          && incoming().id == dhikrId
+          && incoming().userId == userId
+          && incoming().date is string && incoming().date.size() <= 20
+          && incoming().count is int && incoming().count >= 0
+          && incoming().goal is int && (incoming().goal == 33 || incoming().goal == 99 || incoming().goal == 100 || incoming().goal == -1 || incoming().goal >= 0)
+          && incoming().tasbihName is string && incoming().tasbihName.size() <= 100
+          && incoming().updatedAt is string && incoming().updatedAt.size() <= 80
+          && incoming().diff(existing()).affectedKeys().hasOnly(['count', 'goal', 'tasbihName', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isEmailVerified();
+      }
+
+      // FCM Tokens Subcollection for push alerts
+      match /fcm_tokens/{tokenId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+        
+        allow create, update: if isOwner(userId) && isEmailVerified()
+          && isValidId(tokenId)
+          && incoming().token is string && incoming().token.size() <= 300
+          && incoming().userId == userId
+          && (incoming().get('location', '') is string && incoming().get('location', '').size() <= 100)
+          && (incoming().get('deviceInfo', '') is string && incoming().get('deviceInfo', '').size() <= 250)
+          && incoming().createdAt is string && incoming().createdAt.size() <= 80
+          && incoming().keys().hasAll(['token', 'userId', 'createdAt']);
+          
+        allow delete: if isOwner(userId) && isEmailVerified();
+      }
+    }
+
+    // Global Donations for Admin ledger verification without index traps
+    match /global_donations/{donationId} {
+      allow list: if isAdmin();
+      allow get: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isSignedIn() && isEmailVerified()
+        && isValidId(donationId)
+        && incoming().id == donationId
+        && incoming().userId == request.auth.uid
+        && (incoming().amount is int || incoming().amount is float) && incoming().amount > 0
+        && incoming().paymentMethod is string && incoming().paymentMethod.size() <= 80
+        && incoming().date is string && incoming().date.size() <= 80
+        && incoming().userName is string && incoming().userName.size() <= 150
+        && incoming().userEmail is string && incoming().userEmail.size() <= 150
+        && (incoming().get('notes', '') is string && incoming().get('notes', '').size() <= 300)
+        && incoming().keys().hasAll(['id', 'userId', 'amount', 'paymentMethod', 'date', 'userName', 'userEmail'])
+        && (incoming().keys().size() == 7 || (incoming().keys().size() == 8 && incoming().keys().hasAll(['notes'])));
+      allow update: if false; // immutable
+      allow delete: if isAdmin();
+    }
+
+    // Collection Group rule for Masjid ledger audits by Admins
+    match /{path=**}/donations/{donationId} {
+      allow read: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,265 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "The user's account preferences and streak counter.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique identifier matching the user's Auth credential"
+        },
+        "username": {
+          "type": "string",
+          "description": "The custom display name set by the user"
+        },
+        "selectedLocation": {
+          "type": "string",
+          "description": "The chosen city and country for prayer times"
+        },
+        "streak": {
+          "type": "integer",
+          "description": "Current count of active daily habit streaks"
+        },
+        "savingsTotal": {
+          "type": "number",
+          "description": "Cumulative total of spiritual or community savings"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Standard timestamp of the last modify action"
+        }
+      },
+      "required": ["uid", "username", "selectedLocation", "streak", "savingsTotal"]
+    },
+    "UserHabit": {
+      "title": "User Habit",
+      "description": "A single daily task trackable by compliance checkboxes.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Custom primary key representing the habit identifier"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The owner's Auth uid representation"
+        },
+        "name": {
+          "type": "string",
+          "description": "Label text explaining the active spiritual habit"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Toggle indicating completeness status"
+        },
+        "type": {
+          "type": "string",
+          "description": "Category key matching presets"
+        },
+        "extraInfo": {
+          "type": "string",
+          "description": "Helper note fields or targets"
+        }
+      },
+      "required": ["id", "userId", "name", "completed", "type"]
+    },
+    "SavingsTransaction": {
+      "title": "Savings Transaction",
+      "description": "A ledger deposit item trackable under the savings pool.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Primary identifier for the transaction record"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Auth identifier of the owner"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Total coins or currencies deposited or moved"
+        },
+        "date": {
+          "type": "string",
+          "description": "Plain human date representations"
+        },
+        "note": {
+          "type": "string",
+          "description": "Personal explanation description regarding the logs"
+        }
+      },
+      "required": ["id", "userId", "amount", "date", "note"]
+    },
+    "UserReflection": {
+      "title": "User Reflection",
+      "description": "Spiritual journal reflection item log.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Primary key defining the journal log"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Auth ID representation of the owner"
+        },
+        "date": {
+          "type": "string",
+          "description": "Readable system timestamp or direct date string"
+        },
+        "feeling": {
+          "type": "string",
+          "description": "Emoji representation or state representing current emotion"
+        },
+        "ayats": {
+          "type": "string",
+          "description": "Correlated verses or personal studies notes"
+        },
+        "content": {
+          "type": "string",
+          "description": "Full-text detailed text logs for reflection"
+        }
+      },
+      "required": ["id", "userId", "date", "feeling", "ayats", "content"]
+    },
+    "UserDonation": {
+      "title": "User Donation",
+      "description": "Personal history of contributions to the Shahadat Masjid",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique transaction id"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Uid matching Auth"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Faithful contributor's display name"
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Donor's registered Auth email address"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount donated to the Masjid"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment channel used (e.g. eSewa, Fonepay, Bank Transfer)"
+        },
+        "date": {
+          "type": "string",
+          "description": "Timestamp or human readable date"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes or prayers"
+        }
+      },
+      "required": ["id", "userId", "userName", "userEmail", "amount", "paymentMethod", "date"]
+    },
+    "UserDhikr": {
+      "title": "User Dhikr Progress",
+      "description": "Daily dhikr increments, goal settings, and completion stats.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique key (e.g., matching the YYYY-MM-DD string)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Unique user credentials identifier"
+        },
+        "date": {
+          "type": "string",
+          "description": "Daily entry date representation YYYY-MM-DD"
+        },
+        "count": {
+          "type": "integer",
+          "description": "Current counter value accumulated"
+        },
+        "goal": {
+          "type": "integer",
+          "description": "Set goal value (e.g. 33, 99, 100)"
+        },
+        "tasbihName": {
+          "type": "string",
+          "description": "Currently active tasbih phrase (e.g. Subhanallah)"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Standard timestamp of the last modify action"
+        }
+      },
+      "required": ["id", "userId", "date", "count", "goal", "tasbihName", "updatedAt"]
+    },
+    "UserFCMToken": {
+      "title": "User FCM Token",
+      "description": "FCM register credentials for background prayer notifications.",
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "description": "Unique FCM token"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The user Auth ID registration"
+        },
+        "location": {
+          "type": "string",
+          "description": "User location for prayer calculation"
+        },
+        "deviceInfo": {
+          "type": "string",
+          "description": "Standard User Agent description"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "System registered timestamp"
+        }
+      },
+      "required": ["token", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "The user core configuration settings and preferences documentation"
+    },
+    "users/{userId}/habits/{habitId}": {
+      "schema": "UserHabit",
+      "description": "Active tracking checklists under sub-structures"
+    },
+    "users/{userId}/transactions/{transactionId}": {
+      "schema": "SavingsTransaction",
+      "description": "Financial bookkeeping ledgers"
+    },
+    "users/{userId}/reflections/{reflectionId}": {
+      "schema": "UserReflection",
+      "description": "Personal journals linked under profile records"
+    },
+    "users/{userId}/donations/{donationId}": {
+      "schema": "UserDonation",
+      "description": "Masjid contribution transaction history"
+    },
+    "users/{userId}/dhikr/{dhikrId}": {
+      "schema": "UserDhikr",
+      "description": "Daily dhikr record containing latest counts and goal"
+    },
+    "users/{userId}/fcm_tokens/{tokenId}": {
+      "schema": "UserFCMToken",
+      "description": "Push notification hardware and subscription items registered for the profile"
+    }
+  }
+}

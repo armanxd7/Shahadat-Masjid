@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-arabic: "Amiri", serif;
+  
+  --color-primary-base: #012d1d;
+  --color-primary-light: #1b4332;
+  --color-gold-accent: #d4af37;
+  --color-cream-bg: #fdf8f1;
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+/* Islamic Geometric Pattern low-opacity overlay */
+.islamic-pattern-bg {
+  background-image: radial-gradient(#d4af37 0.75px, transparent 0.75px);
+  background-size: 24px 24px;
+}
+
+@keyframes subtle-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+  } 
+  50% {
+    box-shadow: 0 0 40px rgba(165, 208, 185, 0.45);
+  }
+}
+
+.active-prayer-glow {
+  animation: subtle-glow 4s infinite ease-in-out;
+}
+
+.shimmer-effect {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3.5s infinite linear;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  } 100% {
+    background-position: 200% 0;
+  }
+}
+

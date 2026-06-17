@@ -1,0 +1,6 @@
+{
+  "name": "Shahadat Masjid",
+  "description": "An ultra-premium modern Islamic app offering prayer times, qibla compass, habit streak trackers, premium Quran, Duas library, savings logs, and Ramadan countdowns.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
